@@ -7,6 +7,15 @@ pipeline {
                     sh 'node --test'
                 }
             }
+        
+        // stage('Build') {
+        //     steps {
+        //         sh '''
+        //             npm install
+        //             npm test
+        //         '''
+        //     }
+        // }
 
         // stage('Docker') {
         //     steps {
@@ -31,11 +40,15 @@ pipeline {
 
                         ssh -i "$SSH_KEY" "$SSH_USER"@target 'sudo systemctl stop main.service || true'
 
-                        scp -i "$SSH_KEY" index.js "$SSH_USER"@target:/home/$SSH_USER/:
-                        scp -i "$SSH_KEY" main.service "$SSH_USER"@target:
+                        # Copy index.js and node_modules folder to the home directory
+                        scp -i "$SSH_KEY" -r index.js node_modules "$SSH_USER"@target:/home/$SSH_USER/
+
+                        # Copy the systemd service file to the home directory
+                        scp -i "$SSH_KEY" main.service "$SSH_USER"@target:/home/$SSH_USER/
+
 
                         ssh -i "$SSH_KEY" "$SSH_USER"@target '
-                            sudo mv ~/main.service /etc/systemd/system/main.service
+                            sudo mv /home/$SSH_USER/main.service /etc/systemd/system/main.service
                             sudo systemctl daemon-reload
                             sudo systemctl enable main.service
                             sudo systemctl restart main.service
