@@ -41,14 +41,14 @@ pipeline {
                         ssh -i "$SSH_KEY" "$SSH_USER"@target 'sudo systemctl stop main.service || true'
 
                         # Copy index.js and node_modules folder to the home directory
-                        scp -i "$SSH_KEY" -r index.js node_modules "$SSH_USER"@target:/home/$SSH_USER/
+                        scp -i "$SSH_KEY" -r index.js node_modules "$SSH_USER"@target:/home/laborant/
 
                         # Copy the systemd service file to the home directory
-                        scp -i "$SSH_KEY" main.service "$SSH_USER"@target:/home/$SSH_USER/
+                        scp -i "$SSH_KEY" main.service "$SSH_USER"@target:/home/laborant/
 
 
                         ssh -i "$SSH_KEY" "$SSH_USER"@target '
-                            sudo mv /home/$SSH_USER/main.service /etc/systemd/system/main.service
+                            sudo mv /home/laborant/main.service /etc/systemd/system/main.service
                             sudo systemctl daemon-reload
                             sudo systemctl enable main.service
                             sudo systemctl restart main.service
