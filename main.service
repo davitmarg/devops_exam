@@ -1,9 +1,13 @@
 [Unit]
-Description=My Application Service
+Description=Node.js App
 After=network.target
 
 [Service]
-ExecStart=/home/laborant/main
+ExecStart=/usr/bin/node /home/laborant/index.js
+Restart=always
+User=laborant
+Environment=NODE_ENV=production
+WorkingDirectory=/home/laborant
 
 [Install]
 WantedBy=multi-user.target
