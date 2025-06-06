@@ -7,27 +7,18 @@ pipeline {
                     sh 'node --test'
                 }
             }
-        
-        // stage('Build') {
-        //     steps {
-        //         sh '''
-        //             npm install
-        //             npm test
-        //         '''
-        //     }
-        // }
 
-        // stage('Docker') {
-        //     steps {
-        //         sh '''
-        //             docker build -t mynodeapp .
+        stage('Docker') {
+            steps {
+                sh '''
+                    docker build -t mynodeapp .
 
-        //             docker tag myapp ttl.sh/mynodeapp:2h
-        //             docker push ttl.sh/mynodeapp:2h
+                    docker tag mynodeapp ttl.sh/mynodeapp:2h
+                    docker push ttl.sh/mynodeapp:2h
 
-        //         '''
-        //     }
-        // }
+                '''
+            }
+        }
 
          
         stage('Deploy') {
@@ -36,22 +27,14 @@ pipeline {
                     sh '''
                         mkdir -p ~/.ssh
                         chmod 700 ~/.ssh
-                        ssh-keyscan -H target >> ~/.ssh/known_hosts
+                        ssh-keyscan -H docker >> ~/.ssh/known_hosts
 
-                        ssh -i "$SSH_KEY" "$SSH_USER"@target 'sudo systemctl stop main.service || true'
+                       ssh -i "$SSH_KEY" "$SSH_USER"@docker '
 
-                        # Copy index.js and node_modules folder to the home directory
-                        scp -i "$SSH_KEY" -r index.js node_modules "$SSH_USER"@target:/home/laborant/
-
-                        # Copy the systemd service file to the home directory
-                        scp -i "$SSH_KEY" main.service "$SSH_USER"@target:/home/laborant/
-
-
-                        ssh -i "$SSH_KEY" "$SSH_USER"@target '
-                            sudo mv /home/laborant/main.service /etc/systemd/system/main.service
-                            sudo systemctl daemon-reload
-                            sudo systemctl enable main.service
-                            sudo systemctl restart main.service
+                            docker pull ttl.sh/mynodeapp:2h
+                            docker stop mynodeapp || true
+                            docker rm mynodeapp || true
+                            docker run -d --name mynodeapp -p 4444:4444 ttl.sh/mynodeapp:2h
                         '
                     '''
                 }
