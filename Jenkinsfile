@@ -23,19 +23,14 @@ pipeline {
          
         stage('Deploy') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'test-id', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                withCredentials([string(credentialsId: 'k8s-token', variable: 'K8S_TOKEN')]) {
                     sh '''
-                        mkdir -p ~/.ssh
-                        chmod 700 ~/.ssh
-                        ssh-keyscan -H docker >> ~/.ssh/known_hosts
+                        kubectl config set-cluster my-cluster --server=https://k8s:6443 --insecure-skip-tls-verify=true
+                        kubectl config set-credentials jenkins --token=$K8S_TOKEN
+                        kubectl config set-context jenkins-context --cluster=my-cluster --user=jenkins
+                        kubectl config use-context jenkins-context
 
-                       ssh -i "$SSH_KEY" "$SSH_USER"@docker '
-
-                            docker pull ttl.sh/mynodeapp:2h
-                            docker stop mynodeapp || true
-                            docker rm mynodeapp || true
-                            docker run -d --name mynodeapp -p 4444:4444 ttl.sh/mynodeapp:2h
-                        '
+                        kubectl apply -f definition.yaml
                     '''
                 }
             }
